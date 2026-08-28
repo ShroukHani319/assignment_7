@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:lottie/lottie.dart';
 import 'profile_screen.dart';
-//import 'package:shared_preferences/shared_preferences.dart';
-//import 'package:untitled/controller/theme_controller.dart';
-
 import '../controller/theme_controller.dart';
 import 'add_task.dart';
 import 'done_tasks.dart';
@@ -23,17 +20,15 @@ class _HomeScreenState extends State<HomeScreen> {
   var box = Hive.box("my_task");
   var doneBox = Hive.box("done_task");
   Box profileBox = Hive.box('profile');
-
+  List tasks = [];
+  String sortLevel = "High";
 
 
   @override
   Widget build(BuildContext context) {
     String name = profileBox.get('name', defaultValue: 'User');
-    setState(() {
-      name = profileBox.get('name', defaultValue: 'User');
-    });
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    List tasks = box.values.toList();
+    final  isDark = Theme.of(context).brightness == Brightness.dark;
+    var tasks = box.values.toList();
 
     tasks.sort((a, b) {
       Map<String, int> priority = {
@@ -42,10 +37,17 @@ class _HomeScreenState extends State<HomeScreen> {
         "Low": 3,
       };
 
-      return priority[a["level"]]!.compareTo(
-        priority[b["level"]]!,
-      );
+      if (sortLevel == "High") {
+        return priority[a["level"]]!.compareTo(
+          priority[b["level"]]!,
+        );
+      } else {
+        return priority[b["level"]]!.compareTo(
+          priority[a["level"]]!,
+        );
+      }
     });
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: isDark
@@ -53,6 +55,24 @@ class _HomeScreenState extends State<HomeScreen> {
             : Color(0xff052659),
         foregroundColor: Colors.white,
         actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            onSelected: (value) {
+              setState(() {
+                sortLevel = value;
+              });
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: "High",
+                child: Text("High → Low"),
+              ),
+              const PopupMenuItem(
+                value: "Low",
+                child: Text("Low → High"),
+              ),
+            ],
+          ),
           IconButton(
             onPressed: () {
               widget.theme.changeTheme();
@@ -97,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
           : Padding(
               padding: const EdgeInsets.all(8.0),
               child: ListView.builder(
-                itemCount: box.length,
+                itemCount: tasks.length,
                 itemBuilder: (BuildContext context, int index) {
                   return Padding(
                     padding: const EdgeInsets.all(4.0),
@@ -118,15 +138,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: Expanded(
                         child: ListTile(
-                          title: box.getAt(index)["isCompleted"]
+                          title: tasks[index]["isCompleted"]
                               ? Text(
-                                  box.getAt(index)["title"],
+                                  tasks[index]["title"],
                                   style: TextStyle(
                                     decoration: TextDecoration.lineThrough,
                                   ),
                                 )
                               : Text(
-                                  box.getAt(index)["title"],
+                                  tasks[index]["title"],
                                   style: TextStyle(color: isDark
                                       ? Colors.white
                                       : Color(0xff1f2b45),
@@ -139,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                box.getAt(index)["description"],
+                                tasks[index]["description"],
                                 style: TextStyle(color: isDark
                                     ? Color(0xffB8C4D6)
                                     : Color(0xff736d54),
@@ -148,20 +168,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               SizedBox(height: 8),
 
-                              if (box.getAt(index)["date"] != null)
+                              if (tasks[index]["date"] != null)
                                 Text(
-                                  "📅 ${DateTime.parse(box.getAt(index)["date"]).day}/"
-                                  "${DateTime.parse(box.getAt(index)["date"]).month}/"
-                                  "${DateTime.parse(box.getAt(index)["date"]).year}",
+                                  "📅 ${DateTime.parse(tasks[index]["date"]).day}/"
+                                  "${DateTime.parse(tasks[index]["date"]).month}/"
+                                  "${DateTime.parse(tasks[index]["date"]).year}",
                                   style: TextStyle( color: isDark
                                       ? Color(0xffB8C4D6)
                                       : Color(0xff736d54),
                                   ),
                                 ),
 
-                              if (box.getAt(index)["time"] != null)
+                              if (tasks[index]["time"] != null)
                                 Text(
-                                  "⏰ ${box.getAt(index)["time"]}",
+                                  "⏰ ${tasks[index]["time"]}",
                                   style: TextStyle(color: isDark
                                       ? Color(0xffB8C4D6)
                                       : Color(0xff736d54),
@@ -169,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
 
                               Text(
-                                "⭐ Level: ${box.getAt(index)["level"]}",
+                                "⭐ Level: ${tasks[index]["level"]}",
                                 style: TextStyle(
                                   color: isDark
                                       ? Color(0xffB8C4D6)
@@ -232,8 +252,11 @@ class _HomeScreenState extends State<HomeScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DontTasks(),
+                builder: (context) => DoneTasks(),
               ),
+            ).then((value){
+              setState(() {});
+            }
             );
           } else if (index == 2) {
             Navigator.push(

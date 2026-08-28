@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-class DontTasks extends StatefulWidget {
-  const DontTasks({super.key});
+class DoneTasks extends StatefulWidget {
+  const DoneTasks({super.key});
 
   @override
-  State<DontTasks> createState() => _DontTasksState();
+  State<DoneTasks> createState() => _DontTasksState();
 }
 
-class _DontTasksState extends State<DontTasks> {
-  var doneTask = Hive.box("done_task");
-  var task = Hive.box("my_task");
+class _DontTasksState extends State<DoneTasks> {
+  Box box = Hive.box("my_task");
+  Box doneBox = Hive.box("done_task");
   late final isDark = Theme.of(context).brightness == Brightness.dark;
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class _DontTasksState extends State<DontTasks> {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ListView.builder(
-          itemCount: doneTask.length,
+          itemCount: doneBox.length,
           itemBuilder: (BuildContext context, int index) {
             return Padding(
               padding: const EdgeInsets.all(4.0),
@@ -44,14 +44,14 @@ class _DontTasksState extends State<DontTasks> {
                       color: Colors.grey.withOpacity(0.5),
                       spreadRadius: 2,
                       blurRadius: 5,
-                      offset: Offset(0, 3), // changes position of shadow
+                      offset: Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Expanded(
                   child: ListTile(
                     title: Text(
-                      doneTask.getAt(index)['title'],
+                      doneBox.getAt(index)['title'],
                       style: TextStyle(
                         color: isDark
                             ? Colors.white
@@ -62,7 +62,7 @@ class _DontTasksState extends State<DontTasks> {
                       ),
                     ),
                     subtitle: Text(
-                      doneTask.getAt(index)['description'],
+                      doneBox.getAt(index)['description'],
                       style: TextStyle(color: isDark
                           ? Color(0xffB8C4D6)
                           : Color(0xff736d54),),
@@ -70,17 +70,17 @@ class _DontTasksState extends State<DontTasks> {
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () {
-                        doneTask.deleteAt(index);
+                        doneBox.deleteAt(index);
                         setState(() {});
                       },
                     ),
                     leading: Checkbox(
-                      value: doneTask.getAt(index)['isCompleted'],
+                      value: doneBox.getAt(index)['isCompleted'],
                       onChanged: (value) {
                         setState(() {
-                          doneTask.getAt(index)['isCompleted'] = value!;
-                          task.add(doneTask.getAt(index));
-                          doneTask.deleteAt(index);
+                          doneBox.getAt(index)["isCompleted"] = value!;
+                          box.add(doneBox.getAt(index));
+                          doneBox.deleteAt(index);
                         });
                       },
                     ),
